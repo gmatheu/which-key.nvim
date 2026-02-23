@@ -175,6 +175,11 @@ local defaults = {
     bt = {},
   },
   debug = false, -- enable wk.log in the current directory
+  -- Hooks allow you to run custom functions at specific which-key lifecycle events
+  -- Each hook can be a single function or an array of functions.
+  -- All hooks are executed asynchronously (via vim.schedule) to avoid blocking.
+  ---@type wk.Hooks
+  hooks = {},
 }
 
 M.loaded = false

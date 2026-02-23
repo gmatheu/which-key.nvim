@@ -20,6 +20,30 @@ M.recursion = 0
 M.recursion_timer = uv.new_timer()
 M.redraw_timer = uv.new_timer()
 
+---Execute hooks for a given hook type asynchronously
+---@param hook_type wk.HookType the type of hook to execute
+---@param context wk.HookContext the context to pass to the hooks
+function M._run_hooks(hook_type, context)
+  local hooks = Config.hooks and Config.hooks[hook_type]
+  if not hooks then
+    return
+  end
+
+  -- Normalize to array
+  local hooks_array = type(hooks) == "function" and { hooks } or hooks
+
+  -- Execute hooks asynchronously to avoid blocking
+  for _, hook in ipairs(hooks_array) do
+    vim.schedule(function()
+      local ok, err = pcall(hook, context)
+      if not ok then
+        Util.warn("Hook error (" .. hook_type .. "): " .. tostring(err))
+      end
+    end)
+  end
+end
+
+
 ---@return boolean safe, string? reason
 function M.safe(mode_change)
   local old, _new = unpack(vim.split(mode_change, ":", { plain = true }))
@@ -169,6 +193,8 @@ function M.stop()
     return
   end
   Util.debug("state:stop")
+  -- Run stop hooks
+  M._run_hooks("stop", { type = "stop", state = M.state })
   M.state = nil
   vim.schedule(function()
     if not M.state then
@@ -181,6 +207,9 @@ end
 ---@param key? string
 ---@return wk.Node? node
 function M.check(state, key)
+  -- Run check hooks
+  M._run_hooks("check", { type = "check", state = state, key = key })
+
   local View = require("which-key.view")
   local node = key == nil and state.node or (key and state.node:find(key, { expand = true }))
 
@@ -219,6 +248,9 @@ end
 ---@param node? wk.Node
 ---@return false|wk.Node?
 function M.execute(state, key, node)
+  -- Run execute hooks
+  M._run_hooks("execute", { type = "execute", state = state, key = key, node = node })
+
   Triggers.suspend(state.mode)
 
   if node and node.action then
@@ -326,6 +358,9 @@ function M.start(opts)
     started = uv.hrtime() / 1e6 - (opts.waited or 0),
     show = opts.defer ~= true,
   }
+
+  -- Run start hooks
+  M._run_hooks("start", { type = "start", state = M.state })
 
   if not M.check(M.state) then
     Util.debug("executed")

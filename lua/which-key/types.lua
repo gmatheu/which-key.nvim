@@ -115,3 +115,20 @@
 ---@field order? number
 ---@field icon? string
 ---@field icon_hl? string
+
+
+---@alias wk.HookType "start" | "stop" | "execute" | "check"
+
+---@class wk.HookContext
+---@field type wk.HookType the type of hook being called
+---@field state? wk.State the current state (for start, stop, execute, check)
+---@field key? string the key being processed (for check, execute)
+---@field node? wk.Node the node being processed (for check, execute)
+
+---@alias wk.Hook fun(ctx: wk.HookContext):nil a hook function that receives context
+
+---@class wk.Hooks
+---@field start? wk.Hook|wk.Hook[] hooks called when which-key starts
+---@field stop? wk.Hook|wk.Hook[] hooks called when which-key stops
+---@field execute? wk.Hook|wk.Hook[] hooks called before executing a keymap
+---@field check? wk.Hook|wk.Hook[] hooks called when checking a node
