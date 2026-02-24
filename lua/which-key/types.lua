@@ -116,7 +116,6 @@
 ---@field icon? string
 ---@field icon_hl? string
 
-
 ---@alias wk.HookType "start" | "stop" | "execute" | "check"
 
 ---@class wk.HookContext
@@ -124,6 +123,7 @@
 ---@field state? wk.State the current state (for start, stop, execute, check)
 ---@field key? string the key being processed (for check, execute)
 ---@field node? wk.Node the node being processed (for check, execute)
+---@field feed? string the keystr being executed
 
 ---@alias wk.Hook fun(ctx: wk.HookContext):nil a hook function that receives context
 

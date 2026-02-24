@@ -43,7 +43,6 @@ function M._run_hooks(hook_type, context)
   end
 end
 
-
 ---@return boolean safe, string? reason
 function M.safe(mode_change)
   local old, _new = unpack(vim.split(mode_change, ":", { plain = true }))
@@ -248,9 +247,6 @@ end
 ---@param node? wk.Node
 ---@return false|wk.Node?
 function M.execute(state, key, node)
-  -- Run execute hooks
-  M._run_hooks("execute", { type = "execute", state = state, key = key, node = node })
-
   Triggers.suspend(state.mode)
 
   if node and node.action then
@@ -268,6 +264,8 @@ function M.execute(state, key, node)
   end
   Util.debug("feedkeys", tostring(state.mode), keystr)
   local feed = vim.api.nvim_replace_termcodes(keystr, true, true, true)
+  -- Run execute hooks
+  M._run_hooks("execute", { type = "execute", state = state, key = key, node = node, feed = feed })
   vim.api.nvim_feedkeys(feed, "mit", false)
 end
 
@@ -360,7 +358,7 @@ function M.start(opts)
   }
 
   -- Run start hooks
-  M._run_hooks("start", { type = "start", state = M.state })
+  M._run_hooks("start", { type = "start", state = M.state, keys = opts.keys })
 
   if not M.check(M.state) then
     Util.debug("executed")
